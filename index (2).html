@@ -1,0 +1,180 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="utf-8"><title>Noir Photobooth</title>
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<style>
+:root{--bg:#f2efe8;--ink:#161616;--mut:#6d6a63;--card:#fbf9f4;--line:#161616;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media(prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#121212;--ink:#eee9df;--mut:#9a958a;--card:#1c1c1c;--line:#eee9df}}
+:root[data-theme="dark"]{--bg:#121212;--ink:#eee9df;--mut:#9a958a;--card:#1c1c1c;--line:#eee9df}
+*{box-sizing:border-box}html,body{margin:0;min-height:100%}
+body{background:var(--bg);color:var(--ink);font-family:Georgia,'Times New Roman',serif;display:flex;justify-content:center}
+body::after{content:"";position:fixed;inset:0;pointer-events:none;opacity:.07;background-image:repeating-radial-gradient(circle at 30% 20%,#000 0 1px,transparent 1px 3px)}
+main{width:100%;max-width:520px;padding:24px 20px 40px;text-align:center}
+h1{font-weight:400;font-style:italic;font-size:44px;margin:8px 0;letter-spacing:2px}
+h2{font-weight:400;font-style:italic;font-size:28px;margin:6px 0 16px}
+p{color:var(--mut);line-height:1.5}
+.rule{border:0;border-top:1px solid var(--line);border-bottom:1px solid var(--line);height:4px;margin:18px 0}
+button,.btn{font-family:inherit;font-size:16px;letter-spacing:3px;text-transform:uppercase;background:var(--ink);color:var(--bg);border:1px solid var(--ink);padding:14px 28px;cursor:pointer;margin:6px}
+button.ghost{background:transparent;color:var(--ink)}
+button:disabled{opacity:.35;cursor:default}
+.page{display:none}.page.on{display:block}
+.tpls{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin:14px 0}
+.tpl{border:2px solid transparent;padding:4px;background:var(--card);cursor:pointer}
+.tpl.sel{border-color:var(--ink)}
+.tpl canvas{width:100%;display:block}
+.tpl span{font-size:12px;letter-spacing:2px;text-transform:uppercase}
+.cam{position:relative;background:#000;aspect-ratio:520/440;overflow:hidden;border:6px solid var(--card);outline:1px solid var(--line)}
+video{width:100%;height:100%;object-fit:cover;transform:scaleX(-1);}
+#count{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-size:120px;color:#fff;text-shadow:0 0 20px #000}
+.dots{margin:12px}.dots i{display:inline-block;width:12px;height:12px;border:1px solid var(--ink);border-radius:50%;margin:0 5px}.dots i.f{background:var(--ink)}
+.slot{max-width:290px;margin:10px auto;position:relative;perspective:900px}
+.slot .mouth{height:26px;background:linear-gradient(#444,#111);border-radius:14px;margin:0 -14px;position:relative;z-index:2;box-shadow:0 4px 8px #0006}
+.stripwrap{background:linear-gradient(#3a3a3a,#111);padding:0 14px 14px;border-radius:18px}
+.strip{margin-top:-14px;animation:out 1.6s cubic-bezier(.2,.8,.2,1) both;box-shadow:0 8px 18px #0008}
+.strip canvas,.strip img{width:100%;display:block}
+@keyframes out{from{transform:translateY(-95%)}to{transform:none}}
+.tabs button{padding:8px 16px;font-size:13px}.tabs button.on{background:var(--ink);color:var(--bg)}
+.note{font-size:13px;border:1px dashed var(--mut);padding:10px;margin-top:18px}
+</style></head><body><main>
+
+<section class="page on" id="p-home">
+<hr class="rule"><p style="letter-spacing:4px;font-size:12px">EST. 2026 &bull; THREE FRAMES &bull; ONE STRIP</p>
+<h1>Noir<br>Photobooth</h1>
+<p>Step inside. Three frames. One strip.<br>Yours for 24 hours.</p><hr class="rule">
+<button id="start">Start</button>
+<p style="font-size:13px;margin-top:20px">Strips are kept for 1 day, then deleted.</p>
+</section>
+
+<section class="page" id="p-tpl">
+<h2>Choose a template</h2>
+<p style="margin:0">2" &times; 6" strip &bull; 3 photos</p>
+<div class="tpls" id="tpls"></div>
+<input type="file" id="tplup" accept="image/*" hidden>
+<button class="ghost" id="tplbtn">Upload your own</button>
+<p style="font-size:12px">Custom template: portrait image, ratio 1:3 (e.g. 600&times;1800). Photos are placed over it in three slots.</p>
+<button id="tplnext">Next</button>
+</section>
+
+<section class="page" id="p-cam">
+<h2>Take your photos</h2>
+<div class="tabs"><button id="t-cam" class="on">Camera</button><button id="t-gal" class="">Gallery / Drive</button></div>
+<div id="camBox"><div class="cam"><video id="vid" playsinline muted></video><div id="count"></div></div>
+<div class="dots" id="dots"><i></i><i></i><i></i></div>
+<button id="snap">Take 3 photos</button></div>
+<div id="galBox" style="display:none"><p>Pick 3 photos from your device. On phones this includes Google Drive via the file picker.</p>
+<input type="file" id="galin" accept="image/*" multiple hidden><button id="galbtn">Choose 3 photos</button></div>
+<p id="camMsg"></p>
+</section>
+
+<section class="page" id="p-prev">
+<h2>Preview</h2>
+<div class="slot" style="margin-top:0"><div class="strip" style="animation:none"><canvas id="prevC"></canvas></div></div>
+<button id="go">Proceed</button><button class="ghost" id="cancel">Cancel</button>
+</section>
+
+<section class="page" id="p-out">
+<h2 id="outT">Your strip</h2>
+<div id="outBody">
+<div class="slot"><div class="mouth"></div><div class="stripwrap"><div class="strip" id="stripBox"></div></div></div>
+<div class="tabs"><button id="o-s" class="on">Static</button><button id="o-l">Live</button></div>
+<p id="timer"></p>
+<button id="dl">Download</button><button class="ghost" id="again">New session</button>
+<p class="note">The QR code on the strip links back to this session. Download before the 24-hour timer ends &mdash; then it is deleted.</p>
+</div>
+</section>
+</main>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/omggif/1.0.10/omggif.min.js"></script>
+<script type="module">
+import{initializeApp}from"https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+import{getFirestore,doc,getDoc,setDoc,deleteDoc,Timestamp}from"https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+const db=getFirestore(initializeApp({apiKey:"AIzaSyDBIIrXwilLs9Txo7-opmsOlcI39DE7m14",authDomain:"noir-photobooth.firebaseapp.com",projectId:"noir-photobooth",storageBucket:"noir-photobooth.firebasestorage.app",messagingSenderId:"166136519015",appId:"1:166136519015:web:77da2fc1e927cffc7237c2"}));
+const $=id=>document.getElementById(id);
+const W=600,H=1800,PW=520,PH=440,PX=40,PY=[50,530,1010],DAY=864e5,FR=8;
+let tplIdx=0,customImg=null,shots=[],stream=null,sid=null,session=null,mode='s',gifBlob=null,staticBlob=null,tick=null;
+const show=n=>{document.querySelectorAll('.page').forEach(p=>p.classList.toggle('on',p.id==='p-'+n))};
+const store={get(k){try{return JSON.parse(localStorage.getItem(k))}catch(e){return null}},set(k,v){try{localStorage.setItem(k,JSON.stringify(v));return true}catch(e){return false}},del(k){try{localStorage.removeItem(k)}catch(e){}}};
+
+/* templates */
+const TPLS=[
+{n:'Classic',bg:'#f1eee6',ink:'#151515',d(c){c.strokeStyle=this.ink;c.lineWidth=3;c.strokeRect(15,15,W-30,H-30)}},
+{n:'Noir',bg:'#141414',ink:'#eee9df',d(c){c.strokeStyle=this.ink;c.lineWidth=2;c.strokeRect(20,20,W-40,H-40)}},
+{n:'Film',bg:'#0b0b0b',ink:'#e8e4da',d(c){c.fillStyle='#e8e4da';for(let y=10;y<H;y+=44){c.fillRect(8,y,16,24);c.fillRect(W-24,y,16,24)}}},
+{n:'Deco',bg:'#e9e5da',ink:'#1a1a1a',d(c){c.strokeStyle=this.ink;c.lineWidth=2;c.strokeRect(12,12,W-24,H-24);c.strokeRect(22,22,W-44,H-44);for(const[x,y]of[[12,12],[W-12,12],[12,H-12],[W-12,H-12]]){c.beginPath();c.arc(x,y,14,0,7);c.fillStyle=this.bg;c.fill();c.stroke()}}}];
+function bgFor(c){const t=TPLS[tplIdx];if(tplIdx===-1&&customImg){c.drawImage(customImg,0,0,W,H);return{ink:'#fff',custom:true}}c.fillStyle=t.bg;c.fillRect(0,0,W,H);t.d(c);return t}
+function drawCover(c,src,sw,sh,x,y,w,h,z=1){const r=Math.max(w/sw,h/sh)*z,dw=sw*r,dh=sh*r;c.save();c.beginPath();c.rect(x,y,w,h);c.clip();c.drawImage(src,x+(w-dw)/2,y+(h-dh)/2,dw,dh);c.restore()}
+function gray(cv){const c=cv.getContext('2d'),d=c.getImageData(0,0,cv.width,cv.height),p=d.data;for(let i=0;i<p.length;i+=4){let g=.3*p[i]+.59*p[i+1]+.11*p[i+2];g=Math.min(255,Math.max(0,(g-128)*1.12+128+4));p[i]=p[i+1]=p[i+2]=g}c.putImageData(d,0,0)}
+const mk=(w,h)=>{const c=document.createElement('canvas');c.width=w;c.height=h;return c};
+
+/* render strip: f = frame index or -1 for still */
+let qrCanvas=null;
+function render(cv,f,scale,qr){cv.width=Math.round(W*scale);cv.height=Math.round(H*scale);const c=cv.getContext('2d');c.scale(scale,scale);const t=bgFor(c);
+ shots.forEach((s,i)=>{const src=f<0?s.still:s.frames[f];c.drawImage(src,PX,PY[i],PW,PH);c.strokeStyle=t.ink;c.lineWidth=2;c.strokeRect(PX,PY[i],PW,PH)});
+ c.fillStyle=t.ink;c.textAlign='left';c.font='italic 52px Georgia';c.fillText('Photobooth',48,1570);
+ c.font='22px Georgia';c.fillText(new Date(session?session.created:Date.now()).toLocaleDateString('en-GB',{day:'2-digit',month:'long',year:'numeric'}),50,1612);
+ c.font='18px Georgia';c.fillText('SESSION '+(sid||'------').toUpperCase(),50,1650);c.fillText('3 frames, one memory',50,1684);
+ if(qr&&qrCanvas){c.fillStyle='#fff';c.fillRect(W-200,1590,152,152);c.drawImage(qrCanvas,W-196,1594,144,144)}}
+function drawTplThumb(cv,i){const old=tplIdx;tplIdx=i;cv.width=W/4;cv.height=H/4;const c=cv.getContext('2d');c.scale(.25,.25);if(i===-1&&customImg)c.drawImage(customImg,0,0,W,H);else{const t=bgFor(c);c.fillStyle='#8884';PY.forEach(y=>c.fillRect(PX,y,PW,PH));c.fillStyle=t.ink;c.font='italic 52px Georgia';c.fillText('Photobooth',48,1570)}tplIdx=old}
+function buildTpls(){const box=$('tpls');box.innerHTML='';const list=TPLS.map((t,i)=>[t.n,i]);if(customImg)list.push(['Yours',-1]);
+ list.forEach(([n,i])=>{const d=document.createElement('div');d.className='tpl'+(i===tplIdx?' sel':'');const cv=mk(1,1);drawTplThumb(cv,i);d.append(cv);const s=document.createElement('span');s.textContent=n;d.append(s);d.onclick=()=>{tplIdx=i;buildTpls()};box.append(d)})}
+
+/* camera */
+async function openCam(){try{stream=await navigator.mediaDevices.getUserMedia({video:{facingMode:'user',width:1280,height:960}});$('vid').srcObject=stream;await $('vid').play();$('camMsg').textContent=''}catch(e){$('camMsg').textContent='Camera unavailable. Use Gallery instead.'}}
+function stopCam(){if(stream){stream.getTracks().forEach(t=>t.stop());stream=null}}
+const wait=ms=>new Promise(r=>setTimeout(r,ms));
+function dots(n){[...$('dots').children].forEach((d,i)=>d.className=i<n?'f':'')}
+async function snapAll(){if(!stream){$('camMsg').textContent='Camera not ready.';return}$('snap').disabled=true;shots=[];dots(0);const v=$('vid');
+ for(let i=0;i<3;i++){for(let n=3;n>0;n--){$('count').textContent=n;await wait(850)}$('count').textContent='';
+  const fr=[];for(let k=0;k<FR;k++){const c=mk(260,220);const x=c.getContext('2d');x.translate(260,0);x.scale(-1,1);drawCover(x,v,v.videoWidth,v.videoHeight,0,0,260,220);fr.push(c);await wait(110)}
+  const st=mk(PW,PH),x=st.getContext('2d');x.translate(PW,0);x.scale(-1,1);drawCover(x,v,v.videoWidth,v.videoHeight,0,0,PW,PH);shots.push({still:st,frames:fr});dots(i+1)}
+ $('snap').disabled=false;toPreview()}
+function fromFiles(files){const fs=[...files].filter(f=>f.type.startsWith('image/')).slice(0,3);if(fs.length<3){$('camMsg').textContent='Please pick 3 photos.';return}shots=[];
+ Promise.all(fs.map(f=>new Promise(res=>{const im=new Image();im.onload=()=>res(im);im.src=URL.createObjectURL(f)}))).then(ims=>{
+  ims.forEach(im=>{const st=mk(PW,PH);drawCover(st.getContext('2d'),im,im.width,im.height,0,0,PW,PH);const fr=[];for(let k=0;k<FR;k++){const c=mk(260,220);drawCover(c.getContext('2d'),im,im.width,im.height,0,0,260,220,1+k*.012);fr.push(c)}shots.push({still:st,frames:fr})});toPreview()})}
+function toPreview(){stopCam();sid=null;session=null;render($('prevC'),-1,.5,false);show('prev')}
+
+/* session + output */
+const rid=()=>Array.from(crypto.getRandomValues(new Uint8Array(6)),b=>'abcdefghjkmnpqrstuvwxyz23456789'[b%31]).join('');
+function makeQR(url){return new Promise(res=>{const d=document.createElement('div');new QRCode(d,{text:url,width:256,height:256,correctLevel:QRCode.CorrectLevel.M});setTimeout(()=>{qrCanvas=d.querySelector('canvas');res()},60)})}
+function buildGif(pp=true){const gw=160,gh=480,cv=mk(1,1),seq=[...Array(FR).keys()];if(pp)seq.push(...seq.slice(1,-1).reverse());
+ const buf=new Uint8Array(gw*gh*seq.length+4096),g=new GifWriter(buf,gw,gh,{loop:0}),pal=Array.from({length:256},(_,i)=>(Math.round((i>>5)*255/7)<<16)|(Math.round(((i>>2)&7)*255/7)<<8)|Math.round((i&3)*255/3)),BAY=[0,8,2,10,12,4,14,6,3,11,1,9,15,7,13,5],cl=v=>v<0?0:v>255?255:v;
+ seq.forEach(f=>{render(cv,f,gw/W,true);const d=cv.getContext('2d').getImageData(0,0,gw,gh).data,px=new Uint8Array(gw*gh);for(let i=0;i<px.length;i++){const x=i%gw,y=(i/gw)|0,o=(BAY[(y&3)*4+(x&3)]-7.5)*3;px[i]=(cl(d[i*4]+o)>>5<<5)|(cl(d[i*4+1]+o)>>5<<2)|(cl(d[i*4+2]+o)>>6)}g.addFrame(0,0,gw,gh,px,{palette:pal,delay:12})});
+ return new Blob([buf.slice(0,g.end())],{type:'image/gif'})}
+const blobOf=cv=>new Promise(r=>cv.toBlob(r,'image/png'));
+const b64=b=>new Promise(r=>{const f=new FileReader();f.onload=()=>r(f.result);f.readAsDataURL(b)});
+async function proceed(){$('go').disabled=true;window._cloudFail=false;sid=rid();session={created:Date.now()};const url=location.href.split('#')[0]+'#'+sid;await makeQR(url);
+ const big=mk(1,1);render(big,-1,1,true);let png=big.toDataURL('image/jpeg',.8);if(png.length>900000)png=big.toDataURL('image/jpeg',.55);
+ let gif=null;try{let g=buildGif(true);if(g.size*1.34>900000)g=buildGif(false);if(g.size*1.34<=900000){gifBlob=g;gif=await b64(g)}}catch(e){}
+ const rec={created:session.created,png,gif};store.set('pb:'+sid,rec);
+ try{const exp=Timestamp.fromMillis(rec.created+DAY);await setDoc(doc(db,'sessions',sid),{png,created:rec.created,expiresAt:exp});if(gif)await setDoc(doc(db,'gifs',sid),{gif,expiresAt:exp})}catch(e){window._cloudFail=true}
+ $('go').disabled=false;location.hash=sid;showOut(rec)}
+function showOut(rec){show('out');$('outBody').style.display='';$('outT').textContent='Your strip';mode='s';$('o-s').classList.add('on');$('o-l').classList.remove('on');setImg(rec);
+ $('o-l').disabled=!rec.gif;clearInterval(tick);const end=rec.created+DAY,upd=()=>{const left=end-Date.now();if(left<=0){expire();return}const h=Math.floor(left/36e5),m=Math.floor(left%36e5/6e4);$('timer').textContent='Available for '+h+'h '+m+'m, then deleted.'+(window._cloudFail?' (Cloud upload failed: this strip is only on this device.)':'');};upd();tick=setInterval(upd,3e4);window._rec=rec}
+function setImg(rec){const b=$('stripBox');b.innerHTML='';b.style.animation='none';void b.offsetWidth;b.style.animation='';const im=new Image();im.src=mode==='s'?rec.png:(rec.gif||rec.png);b.append(im)}
+function cleanup(id){deleteDoc(doc(db,'sessions',id)).catch(()=>{});deleteDoc(doc(db,'gifs',id)).catch(()=>{})}
+function expire(){clearInterval(tick);if(sid){store.del('pb:'+sid);cleanup(sid)}$('outBody').style.display='none';$('outT').textContent='Session expired';show('out')}
+async function dlnow(){const rec=window._rec,dl=await (window.claude&&claude.use?claude.use('downloads'):null);const live=mode==='l'&&rec.gif;
+ const blob=live?await (await fetch(rec.gif)).blob():await (await fetch(rec.png)).blob();const name='photostrip-'+sid+(live?'.gif':'.jpg');
+ if(dl){try{await dl.save({filename:name,data:blob})}catch(e){}}else{const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=name;a.click()}}
+async function loadHash(){const id=location.hash.slice(1);if(!id)return false;sid=id;let rec=store.get('pb:'+id);
+ if(!rec){$('outBody').style.display='none';$('outT').textContent='Loading...';show('out');try{const s=await getDoc(doc(db,'sessions',id));if(s.exists()){const d=s.data();rec={created:d.created,png:d.png};try{const g=await getDoc(doc(db,'gifs',id));if(g.exists())rec.gif=g.data().gif}catch(e){}}}catch(e){}}
+ if(!rec){cleanup(id);$('outBody').style.display='none';$('outT').textContent='Session not found or expired';show('out');return true}
+ if(Date.now()>rec.created+DAY){expire();return true}session={created:rec.created};showOut(rec);return true}
+
+/* wiring */
+$('start').onclick=()=>{buildTpls();show('tpl')};
+$('tplbtn').onclick=()=>$('tplup').click();
+$('tplup').onchange=e=>{const f=e.target.files[0];if(!f)return;const im=new Image();im.onload=()=>{customImg=im;tplIdx=-1;buildTpls()};im.src=URL.createObjectURL(f)};
+$('tplnext').onclick=()=>{show('cam');openCam()};
+$('t-cam').onclick=()=>{$('camBox').style.display='';$('galBox').style.display='none';$('t-cam').classList.add('on');$('t-gal').classList.remove('on');if(!stream)openCam()};
+$('t-gal').onclick=()=>{stopCam();$('camBox').style.display='none';$('galBox').style.display='';$('t-gal').classList.add('on');$('t-cam').classList.remove('on')};
+$('snap').onclick=snapAll;$('galbtn').onclick=()=>$('galin').click();$('galin').onchange=e=>fromFiles(e.target.files);
+$('cancel').onclick=()=>{shots=[];stopCam();history.replaceState(null,'',location.pathname+location.search);show('home')};
+$('go').onclick=proceed;
+$('o-s').onclick=()=>{mode='s';$('o-s').classList.add('on');$('o-l').classList.remove('on');setImg(window._rec)};
+$('o-l').onclick=()=>{mode='l';$('o-l').classList.add('on');$('o-s').classList.remove('on');setImg(window._rec)};
+$('dl').onclick=dlnow;
+$('again').onclick=()=>{history.replaceState(null,'',location.pathname+location.search);shots=[];show('home')};
+addEventListener('hashchange',()=>{if(location.hash.length>1)loadHash()});
+if(location.hash.length>1)loadHash();else buildTpls();
+</script></body></html>
