@@ -1,0 +1,400 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="utf-8"><title>Noir Photobooth</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<style>
+:root{--o:#6b7340;--c:#f4ecd8;--b:#e5d6b0}
+*{box-sizing:border-box}html,body{margin:0;min-height:100%}
+body{font-family:Georgia,'Times New Roman',serif;transition:.3s;min-height:100vh}
+body.cream{background:var(--c);color:var(--o)}body.olive{background:var(--o);color:var(--c)}
+nav{display:none;align-items:center;justify-content:flex-end;gap:14px;padding:18px 24px;flex-wrap:wrap}#logo{position:absolute;top:18px;left:24px;z-index:5;color:inherit;cursor:pointer;line-height:0}#logo svg{height:48px;display:block}body:not(.nav) main{padding-top:84px}@media(max-width:640px){nav{padding-left:170px}}body.nav nav{display:flex}
+button{font:inherit;font-size:15px;letter-spacing:2px;text-transform:uppercase;padding:12px 26px;background:transparent;color:inherit;border:2px solid currentColor;border-radius:10px;cursor:pointer;transition:.2s;box-shadow:0 4px 10px #0003;margin:5px}
+button:disabled{opacity:.4;cursor:default}
+body.cream button{background:var(--o);color:var(--c);border-color:var(--o)}body.olive button{background:var(--c);color:var(--o);border-color:var(--c)}
+body.olive button:hover:not(:disabled),body.olive button.on{background:var(--c);color:var(--o)}
+button:hover:not(:disabled){box-shadow:0 8px 22px #0008}
+body.cream button.on{outline:3px solid var(--o);outline-offset:3px}body.olive button.on{outline:3px solid var(--c);outline-offset:3px}
+main{max-width:960px;margin:0 auto;padding:20px;text-align:center}
+.pg{display:none}.pg.on{display:block}
+h1{font-size:clamp(40px,9vw,76px);font-weight:400;font-style:italic;margin:10px 0 30px;letter-spacing:3px}
+h2{font-weight:400;font-style:italic;font-size:30px;margin:10px 0 20px}
+.step{display:grid;grid-template-columns:1fr 1fr;gap:20px;margin:22px 0;align-items:stretch}
+.step figure{margin:0;border:2px solid var(--c);border-radius:12px;padding:8px;display:flex;align-items:center;justify-content:center;min-height:140px}
+.step img{max-width:100%;display:block;border-radius:6px}.step figure.ph img{display:none}.step figure.ph:after{content:"Screenshot of step";opacity:.6}
+.step div{border:2px solid var(--c);border-radius:12px;padding:18px;text-align:left;line-height:1.6;display:flex;align-items:center}
+.cams{display:flex;gap:20px;justify-content:center;flex-wrap:wrap}
+.cam{position:relative;background:var(--b);color:var(--o);border-radius:14px;padding:10px;width:min(420px,100%);box-shadow:0 8px 20px #0005}
+.cam video{width:100%;aspect-ratio:4/3;object-fit:cover;background:#222;border-radius:8px;display:block}
+.cam b{display:block;margin-top:6px;font-weight:400}
+#v1{transform:scaleX(-1)}
+#cnt{position:absolute;left:0;right:0;top:20%;font-size:120px;color:#fff;text-shadow:0 0 18px #000;pointer-events:none}
+input,select{font:inherit;padding:8px 10px;border:2px solid var(--o);border-radius:8px;background:var(--c);color:var(--o);box-shadow:0 3px 8px #0003}
+.dots i{display:inline-block;width:14px;height:14px;border:2px solid var(--c);border-radius:50%;margin:10px 5px}.dots i.f{background:var(--c)}
+.ed{display:flex;gap:30px;justify-content:center;flex-wrap:wrap;align-items:flex-start}
+.fr{background:var(--b);padding:14px;border-radius:14px;box-shadow:0 10px 24px #0005;width:min(280px,90vw)}
+.fr canvas{width:100%;display:block;touch-action:none}
+.pan{width:min(380px,100%);text-align:left}
+.box{border:2px solid var(--o);border-radius:14px;padding:14px;margin:12px 0;box-shadow:0 6px 16px #0003;background:#fff4}
+.sw{display:inline-block;width:38px;height:38px;border-radius:50%;margin:4px;border:3px solid var(--o);cursor:pointer;box-shadow:0 3px 8px #0004}.sw.on{outline:3px solid var(--o);outline-offset:2px}
+.stk{display:flex;align-items:center;justify-content:center;gap:8px}.stk div{flex:1;display:flex;flex-wrap:wrap;justify-content:center;min-height:60px}
+.stk span{font-size:36px;cursor:grab;padding:4px;user-select:none}
+.mach{width:min(300px,90vw);background:var(--b);border-radius:16px;padding:0 14px 14px;box-shadow:0 12px 28px #0006}
+.mach .bar{height:26px;margin:0 -14px;background:var(--o);border-radius:16px 16px 6px 6px;box-shadow:0 5px 10px #0005;position:relative;z-index:2}
+.clip{overflow:hidden;padding-bottom:6px}.clip img{width:100%;display:block;box-shadow:0 6px 16px #0006;animation:out 2.2s cubic-bezier(.2,.8,.2,1) both}
+@keyframes out{from{transform:translateY(-100%)}to{transform:none}}
+.col{display:flex;flex-wrap:wrap;justify-content:center;max-width:680px}.col p{flex-basis:100%}
+.row{display:flex;flex-direction:column;gap:24px;justify-content:center;flex-wrap:wrap;align-items:center}
+.mut{opacity:.8;font-size:14px}
+@media(max-width:640px){.step{grid-template-columns:1fr}}
+body.cream{--li:var(--c)}body.olive{--li:var(--o)}nav,main{position:relative;z-index:1}
+#bg{display:none;position:fixed;inset:0;overflow:hidden;z-index:0;pointer-events:none}body.home #bg{display:block}
+#bg i{position:absolute;top:0;width:64px;height:192px;background:var(--c);border-radius:6px;padding:7px 8px;display:flex;flex-direction:column;gap:7px;opacity:.2;animation:fl linear infinite}
+#bg i b{flex:1;background:var(--o);border-radius:3px}
+@keyframes fl{from{transform:translateY(105vh) rotate(var(--r))}to{transform:translateY(-230px) rotate(var(--r))}}
+.red{background:#b3261e;color:#fff;border-color:#b3261e}body button.red{background:#b3261e;color:#fff;border-color:#b3261e}
+.cho{display:flex;gap:28px;justify-content:center;flex-wrap:wrap;margin-bottom:10px}.card{width:min(430px,100%);cursor:pointer}
+.pvw{margin-top:12px;background:var(--b);color:var(--o);border-radius:14px;padding:18px;display:flex;gap:14px;justify-content:center;box-shadow:0 8px 20px #0005}
+.pvw u{text-decoration:none;flex:1;max-width:150px;font-size:16px}.pvw u div{background:#2b2b2b;color:var(--c);border-radius:8px;aspect-ratio:3/4;display:flex;align-items:center;justify-content:center;font-size:48px;margin-bottom:10px}
+#cf{display:none;position:fixed;inset:0;background:#0008;z-index:9;align-items:center;justify-content:center}#cf.on{display:flex}
+#cf div{background:var(--c);color:var(--o);padding:28px;border-radius:14px;box-shadow:0 12px 30px #0008;text-align:center}#cf button{background:var(--o);color:var(--c);border-color:var(--o)}
+#pats button{padding:6px 12px;font-size:12px;letter-spacing:1px;margin:3px}
+#p-out button{background:var(--o);color:var(--c);border-color:var(--o)}#p-out button:hover:not(:disabled){background:var(--o);color:var(--c);box-shadow:0 8px 22px #0008}#dlo{display:none;justify-content:center;flex-wrap:wrap;flex-basis:100%;margin-top:4px}
+
+/* Frame designer button palette */
+/* Frame Designer Button Colours */
+
+/* Default */
+#p-tpl button {
+    background: var(--c);
+    color: var(--o);
+    border: 2px solid var(--o);
+    transition: background 0.2s ease,
+                color 0.2s ease,
+                transform 0.2s ease;
+}
+
+/* Hover */
+#p-tpl button:hover:not(:disabled) {
+    background: var(--o);
+    color: var(--c);
+    border-color: var(--o);
+    box-shadow: 0 8px 22px #0008;
+}
+
+/* Click */
+#p-tpl button:active:not(:disabled) {
+    background: var(--o);
+    color: var(--c);
+    border-color: var(--o);
+    transform: scale(0.97);
+}
+
+/* Selected */
+#p-tpl button.on {
+    background: var(--o);
+    color: var(--c);
+    border-color: var(--o);
+    outline: 3px solid var(--o);
+    outline-offset: 3px;
+}
+#p-tpl .tpl-actions{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+#p-tpl .tpl-actions button{margin:5px}
+
+/* Output format buttons match the frame designer controls */
+#p-out #dlo button{background:var(--c);color:var(--o);border:2px solid var(--o)}
+#p-out #dlo button:hover:not(:disabled){background:var(--c);color:var(--o);box-shadow:0 8px 22px #0008}
+
+/* Remove button - Red */
+#cx {
+    background: #dc3545;
+    color: #ffffff;
+    border: 2px solid #dc3545;
+}
+
+/* Hover */
+#cx:hover:not(:disabled) {
+    background: #bb2d3b;
+    color: #ffffff;
+    border-color: #bb2d3b;
+    box-shadow: 0 8px 22px #0008;
+}
+
+/* Click */
+#cx:active:not(:disabled) {
+    background: #a52834;
+    color: #ffffff;
+    transform: scale(0.97);
+}
+/* Remove button - Red */
+#cx3 {
+    background: #dc3545;
+    color: #ffffff;
+    border: 2px solid #dc3545;
+}
+
+/* Hover */
+#cx3:hover:not(:disabled) {
+    background: #bb2d3b;
+    color: #ffffff;
+    border-color: #bb2d3b;
+    box-shadow: 0 8px 22px #0008;
+}
+
+/* Click */
+#cx3:active:not(:disabled) {
+    background: #a52834;
+    color: #ffffff;
+    transform: scale(0.97);
+}
+/* LACE BORDER */
+#lc {
+    display: none;
+}
+
+</style></head><body class="olive nav home">
+<a id="logo" title="Home"><svg viewBox="0 0 150 48" aria-label="Noir Photobooth"><rect x="2" y="2" width="26" height="44" rx="3" fill="currentColor"/><rect x="7" y="7" width="16" height="10" rx="1" style="fill:var(--li)"/><rect x="7" y="19" width="16" height="10" rx="1" style="fill:var(--li)"/><rect x="7" y="31" width="16" height="10" rx="1" style="fill:var(--li)"/><text x="38" y="33" font-size="26" font-style="italic" letter-spacing="2" fill="currentColor" font-family="Georgia,serif">NOIR</text></svg></a>
+<div id="bg"></div>
+<nav><button data-go="home">Home</button><button data-go="how">How To Use</button></nav>
+<main>
+<section class="pg on" id="p-home"><div style="margin-top:12vh"><p style="letter-spacing:6px">WELCOME TO</p><h1>NOIR<br>Photobooth</h1><button id="s1">Start</button></div></section>
+
+<section class="pg" id="p-how"><h2>How To Use</h2><div id="steps"></div><button id="s2">Start</button></section>
+
+<section class="pg" id="p-frame"><h2>Choose your frame</h2><div class="cho">
+<div class="card" id="single"><button>Single</button><div class="pvw"><u><div>📷</div>Your</u></div></div>
+<div class="card" id="duo"><button>Duo</button><div class="pvw"><u><div>📷</div>Your</u><u><div>📷</div>Friend</u></div></div></div>
+<button id="cx3" class="red">Cancel</button></section>
+
+<section class="pg" id="p-cam"><h2>Take your photos</h2>
+<div id="room" style="display:none;margin-bottom:16px"><button id="mk">Create room</button> <input id="jc" placeholder="Room code" size="8" maxlength="4" style="text-transform:uppercase"><button id="jn">Join</button><p id="code" class="mut"></p></div>
+<div class="cams"><div class="cam"><video id="v1" playsinline muted autoplay></video><b>Yours</b><div id="cnt"></div></div>
+<div class="cam" id="fcam" style="display:none"><video id="v2" playsinline autoplay></video><b>Friend's</b></div></div>
+<div class="dots" id="dots"><i></i><i></i><i></i></div><button id="go">Start</button><button id="cx" class="red">Cancel</button><p id="msg" class="mut"></p></section>
+
+<section class="pg" id="p-tpl"><h2 style="font-weight:700;font-style:normal">Design your frame</h2><div class="ed">
+<div><div class="fr"><canvas id="pv" width="500" height="1500"></canvas></div></div>
+<div class="pan">
+<div id="t0"><div class="box"><b>Colour</b><br><span id="cols"></span><input type="color" id="cc" value="#ffffff" style="width:50px;padding:2px;vertical-align:middle"></div><div class="box"><b>Pattern</b> <input type="color" id="pc" value="#6b7340" title="Pattern colour" style="width:50px;padding:2px;vertical-align:middle"><br><span id="pats"></span><br><button id="lc">Lace</button></div>
+		<div class="box"><b>Your own frame</b><p class="mut" style="margin:6px 0"><br>PNG with transparent photo windows.<br><br>Size: 1) 500 &times; 1500 px (1:3), 2) 1000 &times; 3000 px for sharper quality.<br><br>Windows at 1000 &times; 3000: x 80, y 80 / 900 / 1720, each 840 &times; 760 px. <br><br>The Guide button downloads a template.<br><br></p><input type="file" id="fu" accept="image/png" hidden><button id="fb">Upload</button><button id="fg">Guide</button><button id="fx">Remove</button></div>
+	<br><br><button class="nx">Next</button></div>
+<div id="t1" style="display:none"><div class="box"><b>Sticker</b> <span class="mut">(drag onto the frame, double-click to remove)</span><div class="stk"><button id="sp">&lt;</button><div id="sts"></div><button id="sn">&gt;</button></div>
+<p style="margin:8px 0">Size <input type="range" id="ss" min="30" max="240" value="64"></p><input type="file" id="su" accept="image/*" hidden><button id="sb">Add your own</button></div><button class="pv">Previous</button><button class="nx">Next</button></div>
+<div id="t2" style="display:none"><div class="box"><b>Text</b><br><input id="tv" maxlength="28" placeholder="Type your text here" style="width:100%;margin:10px 0;font-size:22px;padding:18px 12px">
+<button id="tb"><b>B</b></button><button id="ti"><i>I</i></button><button id="tu"><u>U</u></button><br>
+<select id="tf"><option>Georgia</option><option>Arial</option><option>Courier New</option><option>Brush Script MT</option><option>Impact</option></select>
+<input type="color" id="tc" value="#000000" style="width:50px;padding:2px;vertical-align:middle"><br>
+<button data-a="left" title="left"><svg width="20" height="16" viewBox="0 0 20 16" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 2h18M1 6h11M1 10h18M1 14h11"/></svg></button><button data-a="center" title="center"><svg width="20" height="16" viewBox="0 0 20 16" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 2h18M5 6h10M1 10h18M5 14h10"/></svg></button><button data-a="right" title="right"><svg width="20" height="16" viewBox="0 0 20 16" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 2h18M8 6h11M1 10h18M8 14h11"/></svg></button><br>Size <input type="range" id="ts" min="20" max="90" value="44"></div><div class="tpl-actions"><button class="pv">Previous</button><button id="done" style="display:none">Done</button></div></div>
+</div></div></section>
+
+<section class="pg" id="p-out"><h2 id="ot">Your photo strip</h2><div class="row" id="ob">
+<div class="mach"><div class="bar"></div><div class="clip"><img id="sim"></div></div>
+<div class="col"><button id="dl">Download</button><button id="nw">New session</button><div id="dlo"><button id="dj">.jpg</button><button id="dp">.pdf</button><button id="dm">.mp4</button></div>
+<p class="mut" id="tm">Available for 24 hours, then deleted.</p></div></div></section>
+</main>
+<div id="cf"><div><p>Are you sure you want to cancel?</p><button id="yes">Yes</button><button id="no">No</button></div></div>
+<script type="module">
+import{initializeApp}from"https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+import{getFirestore,doc,getDoc,setDoc,updateDoc,deleteDoc,onSnapshot,Timestamp}from"https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+const db=getFirestore(initializeApp({apiKey:"AIzaSyDBIIrXwilLs9Txo7-opmsOlcI39DE7m14",authDomain:"noir-photobooth.firebaseapp.com",projectId:"noir-photobooth",storageBucket:"noir-photobooth.firebasestorage.app",messagingSenderId:"166136519015",appId:"1:166136519015:web:77da2fc1e927cffc7237c2"}));
+const $=i=>document.getElementById(i),W=500,H=1500,PX=40,PW=420,PH=380,PY=[40,450,860],DAY=864e5;
+const THEME={home:'olive nav home',how:'olive nav',frame:'olive',cam:'olive',tpl:'cream',out:'cream'};
+const show=n=>{document.querySelectorAll('.pg').forEach(p=>p.classList.toggle('on',p.id=='p-'+n));document.body.className=THEME[n]};
+const mk=(w,h)=>{const c=document.createElement('canvas');c.width=w;c.height=h;return c},wait=ms=>new Promise(r=>setTimeout(r,ms)),ld=u=>new Promise(r=>{const i=new Image();i.onload=()=>r(i);i.src=u});
+const rid=n=>Array.from(crypto.getRandomValues(new Uint8Array(n)),b=>'ABCDEFGHJKMNPQRSTUVWXYZ23456789'[b%31]).join('');
+let abort=false,mode='single',stream,shots,cfg,pc,dc,role,jpg,sid,tick,vidBlob,vmt;
+const fresh=()=>{shots={local:[],friend:[]};vidBlob=null;cfg={color:'#ffffff',pc:'#6b7340',lace:0,fimg:null,pat:0,st:[],t:{v:'',b:0,i:0,u:0,f:'Georgia',c:'#000000',a:'center',s:44}}};fresh();
+
+/* nav + how to use */
+document.querySelectorAll('[data-go]').forEach(b=>b.onclick=()=>show(b.dataset.go));
+const STEPS=['Press Start, then choose Single (just you) or Duo (you and a friend on two computers).','Duo: one person creates a room and shares the 4-letter code, the other joins with it. Allow camera access.','Press Start. After a 5 second countdown the booth takes 3 photos.','Pick your frame colour and pattern, add stickers by dragging, and add your text.','Press Done. Your strip comes out of the machine. Download it as .jpg, .mp4 or .pdf within 24 hours.'];
+$('steps').innerHTML=STEPS.map((t,i)=>`<div class="step"><figure><img src="steps/step${i+1}.png" alt="" onerror="this.parentNode.classList.add('ph')"></figure><div>${i+1}. ${t}</div></div>`).join('');
+$('s1').onclick=$('s2').onclick=()=>show('frame');
+
+/* camera */
+async function openCam(){try{stream=stream||await navigator.mediaDevices.getUserMedia({video:{facingMode:'user',width:1280,height:960},audio:false});$('v1').srcObject=stream;$('msg').textContent=''}catch(e){$('msg').textContent='Camera unavailable. Please allow camera access.'}}
+function enter(m){abort=false;mode=m;fresh();role=null;dc=null;$('room').style.display=$('fcam').style.display=m=='duo'?'':'none';$('code').textContent='';$('go').disabled=false;$('dots').childNodes.forEach(d=>d.className='');show('cam');openCam()}
+$('single').onclick=()=>enter('single');$('duo').onclick=()=>enter('duo');
+const leave=()=>{abort=true;if(stream)stream.getTracks().forEach(t=>t.stop());stream=null;if(pc)pc.close();pc=dc=null;role=null;$('cf').classList.remove('on');$('cnt').textContent='';show('home')};
+$('cx3').onclick=()=>show('home');$('cx').onclick=()=>$('cf').classList.add('on');$('no').onclick=()=>$('cf').classList.remove('on');$('yes').onclick=leave;$('logo').onclick=()=>{leave();clearInterval(tick);history.replaceState(null,'',location.pathname);fresh()};
+for(let k=0;k<14;k++){const i=document.createElement('i'),d=16+Math.random()*10;i.style.cssText=`left:${k*7+Math.random()*3}%;--r:${Math.random()*40-20}deg;animation-duration:${d}s;animation-delay:-${Math.random()*d}s`;i.innerHTML='<b></b><b></b><b></b>';$('bg').append(i)}
+
+/* duo: WebRTC with Firestore signalling */
+const wire=c=>{dc=c;c.onopen=()=>{$('msg').textContent='Friend connected.'};c.onmessage=e=>{const m=JSON.parse(e.data);if(m.go)seq(false);if(m.done)openSession(m.done)}};
+function mkpc(){pc=new RTCPeerConnection({iceServers:[{urls:'stun:stun.l.google.com:19302'}]});stream.getTracks().forEach(t=>pc.addTrack(t,stream));pc.ontrack=e=>{$('v2').srcObject=e.streams[0]}}
+const ice=()=>new Promise(r=>{if(pc.iceGatheringState=='complete')return r();pc.onicegatheringstatechange=()=>pc.iceGatheringState=='complete'&&r();setTimeout(r,3500)});
+$('mk').onclick=async()=>{if(!stream)return;const code=rid(4);mkpc();wire(pc.createDataChannel('c'));await pc.setLocalDescription(await pc.createOffer());await ice();
+ await setDoc(doc(db,'rooms',code),{offer:JSON.stringify(pc.localDescription),t:Date.now()});role='host';$('code').textContent='Room code: '+code+' (share it with your friend)';
+ onSnapshot(doc(db,'rooms',code),s=>{const d=s.data();if(d&&d.answer&&!pc.remoteDescription)pc.setRemoteDescription(JSON.parse(d.answer))})};
+$('jn').onclick=async()=>{const code=$('jc').value.trim().toUpperCase(),s=await getDoc(doc(db,'rooms',code));if(!s.exists()){$('msg').textContent='Room not found.';return}
+ mkpc();pc.ondatachannel=e=>wire(e.channel);await pc.setRemoteDescription(JSON.parse(s.data().offer));await pc.setLocalDescription(await pc.createAnswer());await ice();
+ await updateDoc(doc(db,'rooms',code),{answer:JSON.stringify(pc.localDescription)});role='guest';$('go').disabled=true;$('msg').textContent='Joined. Your friend will press Start.'};
+
+/* capture: 5 second countdown, 3 photos */
+function cover(x,v,mir){const r=Math.max(PW/v.videoWidth,PH/v.videoHeight),w=v.videoWidth*r,h=v.videoHeight*r;if(mir){x.translate(PW,0);x.scale(-1,1)}x.drawImage(v,(PW-w)/2,(PH-h)/2,w,h)}
+function grab(v,mir){const c=mk(PW,PH);cover(c.getContext('2d'),v,mir);return c}
+function recorderType(){
+ const types=['video/mp4;codecs=avc1.42E01E','video/mp4','video/webm;codecs=vp9','video/webm'];
+ return types.find(t=>MediaRecorder.isTypeSupported(t))||'';
+}
+function recStart(){
+ const duo=mode==='duo',c=mk(duo?1280:640,480),x=c.getContext('2d'),mt=recorderType();
+ if(!mt)throw new Error('This browser does not support video recording.');
+ vmt=mt;const r=new MediaRecorder(c.captureStream(30),{mimeType:mt}),chunks=[];
+ r.ondataavailable=e=>{if(e.data.size)chunks.push(e.data)};
+ let live=true;
+ const f=()=>{
+  if(!live)return;
+  x.fillStyle='#111';x.fillRect(0,0,c.width,c.height);
+  x.save();x.translate(640,0);x.scale(-1,1);x.drawImage($('v1'),0,0,640,480);x.restore();
+  if(duo&&$('v2').readyState>=2)x.drawImage($('v2'),640,0,640,480);
+  requestAnimationFrame(f);
+ };
+ f();r.start();
+ return ()=>new Promise(resolve=>{
+  live=false;r.onstop=()=>resolve(new Blob(chunks,{type:vmt}));
+  try{r.stop()}catch(e){resolve(null)}
+ });
+}
+async function seq(cap){
+ abort=false;$('go').disabled=true;const d=$('dots').children;[...d].forEach(i=>i.className='');
+ let stop=null;
+ try{if(cap)stop=recStart()}catch(e){$('msg').textContent=e.message;$('go').disabled=false;return}
+ const bail=async()=>{if(abort){if(stop)vidBlob=await stop();return true}return false};
+ for(let i=0;i<3;i++){
+  for(let n=3;n>0;n--){if(await bail())return;$('cnt').textContent=n;await wait(1000)}
+  if(await bail())return;$('cnt').textContent='';
+  if(cap){shots.local.push(grab($('v1'),true));if(mode==='duo')shots.friend.push(grab($('v2'),false))}
+  d[i].className='f';await wait(500);
+ }
+ if(await bail())return;
+ if(cap){vidBlob=await stop();drawPv();show('tpl');step(0)}
+ else $('msg').textContent='Your friend is designing the frame...';
+}
+$('go').onclick=()=>{if(mode=='duo'){if(!dc||dc.readyState!='open'){$('msg').textContent='Connect with your friend first.';return}dc.send('{"go":1}')}seq(true)};
+
+/* frame designer. To add a pattern: add an entry to PATS. To add stickers: add emoji to SETS. Both are drawn relative to W x H so they always fit the frame. */
+const COLS=['#ffffff','#e5d6b0','#f4ecd8','#6b7340','#b5bb8a','#222222','#d9b06b'];
+const ln=(x,a,b,c,d)=>{x.lineWidth=6;x.beginPath();x.moveTo(a,b);x.lineTo(c,d);x.stroke()};
+const rep=(ch,sz,gap)=>x=>{x.font=sz+'px serif';x.textAlign='center';x.textBaseline='middle';for(let y=gap/2,r=0;y<H;y+=gap,r++)for(let a=(r%2?gap:gap/2);a<W+gap;a+=gap)x.fillText(ch,a,y)};
+const PATS=[{n:'Plain',d(){}},
+{n:'Dots',d(x){for(let y=20;y<H;y+=40)for(let a=20;a<W;a+=40){x.beginPath();x.arc(a,y,6,0,7);x.fill()}}},
+{n:'Stripes',d(x){for(let y=0;y<H;y+=44)x.fillRect(0,y,W,18)}},
+{n:'Checks',d(x){for(let y=0;y<H;y+=50)for(let a=0;a<W;a+=50)if((a+y)/50%2==0)x.fillRect(a,y,50,50)}},
+{n:'Diagonal',d(x){for(let k=-H;k<W;k+=44)ln(x,k,0,k+H,H)}},
+{n:'Grid',d(x){for(let a=0;a<W;a+=50)ln(x,a,0,a,H);for(let y=0;y<H;y+=50)ln(x,0,y,W,y)}},
+{n:'Leopard',d(x){let q=7;const r=()=>(q=q*16807%2147483647)/2147483647;x.lineWidth=9;for(let i=0;i<150;i++){const a=r()*W,b=r()*H,rr=10+r()*14,t=r()*6;x.beginPath();x.arc(a,b,rr,t,t+4.4);x.stroke();x.beginPath();x.arc(a,b,rr*.35,0,7);x.fill()}}},
+{n:'Hearts',d:rep('♥',30,70)},{n:'Stars',d:rep('★',30,70)},{n:'Flowers',d:rep('✿',32,76)},{n:'Leaves',d:rep('❧',34,76)}];
+const SETS=[['⭐','🌟','✨','💫','🌙','☀️'],['❤️','💚','🌸','🌼','🍃','🌿'],['🎀','🎞️','📷','🎈','🎉','☕'],['🐱','🐶','🦋','🐻','🐰','🐼'],['🍕','🍰','🍓','🍦','🧋','🍩'],['😀','😎','🥰','😜','🤩','😍'],['👑','💎','🎵','🔥','⚡','🌈']];let si=0,sel=null;
+function lace(x,X,Y,Wd,Hd){
+  /* Lace border uses the same outer dimensions and narrow inset as the standard frame. */
+  const r=3,g=10;
+  x.fillStyle='#fbf3dc';x.fillRect(X,Y,Wd,Hd);
+  x.fillStyle=cfg.color;
+  for(let a=X+r;a<=X+Wd-r;a+=g){
+    for(const b of [Y+r,Y+Hd-r]){x.beginPath();x.arc(a,b,2.5,0,Math.PI*2);x.fill()}
+  }
+  for(let b=Y+r;b<=Y+Hd-r;b+=g){
+    for(const a of [X+r,X+Wd-r]){x.beginPath();x.arc(a,b,2.5,0,Math.PI*2);x.fill()}
+  }
+}
+function strip(list){const c=mk(W,H),x=c.getContext('2d');x.fillStyle=cfg.color;x.fillRect(0,0,W,H);x.fillStyle=x.strokeStyle=cfg.pc+'99';PATS[cfg.pat].d(x);x.textBaseline='alphabetic';
+ PY.forEach((y,i)=>{const L=list[i];if(cfg.fimg){if(L)x.drawImage(L,PX,y,PW,PH)}else if(cfg.lace){lace(x,PX-6,y-6,PW+12,PH+12);x.fillStyle='#fff';x.fillRect(PX,y,PW,PH);if(L)x.drawImage(L,PX,y,PW,PH)}else{x.fillStyle='#fff';x.fillRect(PX-6,y-6,PW+12,PH+12);if(L)x.drawImage(L,PX,y,PW,PH)}});if(cfg.fimg)x.drawImage(cfg.fimg,0,0,W,H);
+ const t=cfg.t;if(t.v){x.fillStyle=t.c;x.font=`${t.i?'italic ':''}${t.b?'bold ':''}${t.s}px ${t.f}`;x.textAlign=t.a;const tx=t.a=='left'?PX:t.a=='right'?W-PX:W/2;x.fillText(t.v,tx,1360);
+  if(t.u){const w=x.measureText(t.v).width;x.fillRect(t.a=='left'?tx:t.a=='right'?tx-w:tx-w/2,1368,w,3)}}
+ x.textAlign='center';x.textBaseline='middle';cfg.st.forEach(s=>{if(s.img){const h=s.s*s.img.height/s.img.width;x.drawImage(s.img,s.x-s.s/2,s.y-h/2,s.s,h)}else{x.font=s.s+'px serif';x.fillText(s.e,s.x,s.y)}});return c}
+const drawPv=()=>{const c=$('pv').getContext('2d');c.clearRect(0,0,W,H);c.drawImage(strip(shots.local),0,0)};
+function sync(){sel=null;$('tv').value=cfg.t.v;$('tf').value=cfg.t.f;$('tc').value=cfg.t.c;$('ts').value=cfg.t.s;['b','i','u'].forEach(k=>$('t'+k).classList.toggle('on',!!cfg.t[k]));document.querySelectorAll('[data-a]').forEach(x=>x.classList.toggle('on',x.dataset.a==cfg.t.a))}
+function pal(){$('cols').innerHTML=COLS.map(c=>`<span class="sw" style="background:${c}" data-c="${c}"></span>`).join('');mark();$('cc').value=cfg.color;$('pc').value=cfg.pc;$('lc').classList.toggle('on',!!cfg.lace);
+ $('pats').innerHTML=PATS.map((p,i)=>`<button class="${i==cfg.pat?'on':''}" data-p="${i}">${p.n}</button>`).join('');
+ $('sts').innerHTML=SETS[si].map(e=>`<span draggable="true">${e}</span>`).join('');
+ $('sts').querySelectorAll('span').forEach(s=>{s.ondragstart=e=>e.dataTransfer.setData('text',s.textContent);s.onclick=()=>addSt({e:s.textContent})})}
+const mark=()=>document.querySelectorAll('.sw').forEach(s=>s.classList.toggle('on',s.dataset.c==cfg.color));
+const pick=s=>{sel=s;if(s)$('ss').value=s.s;drawPv()},addSt=o=>{const s={x:W/2,y:H/2,s:64,...o};cfg.st.push(s);pick(s)};
+function step(n){sync();[0,1,2].forEach(i=>$('t'+i).style.display=i==n?'':'none');$('done').style.display=n==2?'':'none';pal()}
+$('cols').onclick=e=>{if(e.target.dataset.c){cfg.color=e.target.dataset.c;$('cc').value=cfg.color;mark();drawPv()}};$('cc').oninput=e=>{cfg.color=e.target.value;mark();drawPv()};
+$('pc').oninput=e=>{cfg.pc=e.target.value;drawPv()};$('lc').onclick=()=>{cfg.lace^=1;pal();drawPv()};
+$('fb').onclick=()=>$('fu').click();$('fu').onchange=async e=>{const f=e.target.files[0];if(f){cfg.fimg=await ld(URL.createObjectURL(f));drawPv()}e.target.value=''};$('fx').onclick=()=>{cfg.fimg=null;drawPv()};
+$('fg').onclick=()=>{const c=mk(W*2,H*2),x=c.getContext('2d');x.scale(2,2);x.fillStyle='#ffbf00';x.fillRect(0,0,W,H);PY.forEach(y=>x.clearRect(PX,y,PW,PH));c.toBlob(b=>save(b,'frame-guide-1000x3000.png'))};
+$('pats').onclick=e=>{if(e.target.dataset.p){cfg.pat=+e.target.dataset.p;pal();drawPv()}};
+document.querySelectorAll('.nx').forEach(b=>b.onclick=()=>step(b.closest('[id^=t]').id[1]*1+1));document.querySelectorAll('.pv').forEach(b=>b.onclick=()=>step(b.closest('[id^=t]').id[1]*1-1));
+$('sp').onclick=()=>{si=(si+SETS.length-1)%SETS.length;pal()};$('sn').onclick=()=>{si=(si+1)%SETS.length;pal()};
+$('ss').oninput=e=>{if(sel){sel.s=+e.target.value;drawPv()}};
+$('sb').onclick=()=>$('su').click();$('su').onchange=async e=>{const f=e.target.files[0];if(f){addSt({img:await ld(URL.createObjectURL(f)),s:140});e.target.value=''}};
+const pos=e=>{const r=$('pv').getBoundingClientRect();return{x:(e.clientX-r.left)/r.width*W,y:(e.clientY-r.top)/r.height*H}};
+let drag=null;const pvc=$('pv');
+pvc.ondragover=e=>e.preventDefault();pvc.ondrop=e=>{e.preventDefault();addSt({e:e.dataTransfer.getData('text'),...pos(e)})};
+const hit=p=>{for(let i=cfg.st.length-1;i>=0;i--)if(Math.hypot(cfg.st[i].x-p.x,cfg.st[i].y-p.y)<Math.max(30,cfg.st[i].s*.6))return cfg.st[i]};
+pvc.onpointerdown=e=>{drag=hit(pos(e));if(drag){pick(drag);pvc.setPointerCapture(e.pointerId)}};pvc.onpointermove=e=>{if(drag){Object.assign(drag,pos(e));drawPv()}};pvc.onpointerup=()=>drag=null;
+pvc.ondblclick=e=>{const s=hit(pos(e));if(s){cfg.st.splice(cfg.st.indexOf(s),1);if(sel==s)sel=null;drawPv()}};
+const upd=()=>{Object.assign(cfg.t,{v:$('tv').value,f:$('tf').value,c:$('tc').value,s:+$('ts').value});drawPv()};
+['tv','tf','tc','ts'].forEach(i=>$(i).oninput=upd);
+[['tb','b'],['ti','i'],['tu','u']].forEach(([id,k])=>$(id).onclick=()=>{cfg.t[k]^=1;$(id).classList.toggle('on');drawPv()});
+document.querySelectorAll('[data-a]').forEach(b=>b.onclick=()=>{cfg.t.a=b.dataset.a;document.querySelectorAll('[data-a]').forEach(x=>x.classList.toggle('on',x==b));drawPv()});
+
+/* output + session (24h) */
+function finalJpg(){const L=[strip(shots.local)];if(mode=='duo')L.push(strip(shots.friend));const c=mk(L.length*W+(L.length+1)*30,H+60),x=c.getContext('2d');x.fillStyle='#f4ecd8';x.fillRect(0,0,c.width,c.height);
+ L.forEach((s,i)=>{x.shadowColor='#0006';x.shadowBlur=20;x.drawImage(s,30+i*(W+30),30)});let u=c.toDataURL('image/jpeg',.85);if(u.length>900000)u=c.toDataURL('image/jpeg',.55);return u}
+$('done').onclick=async()=>{const u=finalJpg(),id=rid(6),created=Date.now();let ok=true;
+ try{await setDoc(doc(db,'sessions',id),{jpg:u,created,expiresAt:Timestamp.fromMillis(created+DAY)})}catch(e){ok=false}
+ history.replaceState(null,'','#'+id);showOut(u,created,id,ok);if(dc&&dc.readyState=='open'&&role=='host')dc.send(JSON.stringify({done:id}))};
+function showOut(u,created,id,ok=true){jpg=u;sid=id;$('dm').disabled=!vidBlob;$('dlo').style.display='none';show('out');$('ob').style.display='';$('ot').textContent='Your photo strip';const im=$('sim');im.style.animation='none';void im.offsetWidth;im.style.animation='';im.src=u;
+ clearInterval(tick);const f=()=>{const l=created+DAY-Date.now();if(l<=0){expire();return}$('tm').textContent='Available for '+Math.floor(l/36e5)+'h '+Math.floor(l%36e5/6e4)+'m, then deleted.'+(ok?'':' (Cloud save failed: download now.)')};f();tick=setInterval(f,3e4)}
+function expire(){clearInterval(tick);deleteDoc(doc(db,'sessions',sid)).catch(()=>{});$('ob').style.display='none';$('ot').textContent='Session expired';show('out')}
+async function openSession(id){sid=id;$('ob').style.display='none';$('ot').textContent='Loading...';show('out');history.replaceState(null,'','#'+id);
+ try{const s=await getDoc(doc(db,'sessions',id));if(s.exists()){const d=s.data();if(Date.now()>d.created+DAY){expire();return}showOut(d.jpg,d.created,id);return}}catch(e){}
+ $('ot').textContent='Session not found or expired'}
+const save=(b,n)=>{const a=document.createElement('a');a.href=URL.createObjectURL(b);a.download=n;a.click()};
+$('dj').onclick=async()=>save(await(await fetch(jpg)).blob(),'noir-'+sid+'.jpg');
+function mkpdf(b,w,h){const e=new TextEncoder(),P=[],o=[];let n=0;const add=x=>{const u=typeof x=='string'?e.encode(x):x;P.push(u);n+=u.length},pw=w*.6,ph=h*.6;
+ const ob=(i,s,bin)=>{o[i]=n;add(i+' 0 obj\n'+s);if(bin){add(bin);add('\nendstream')}add('\nendobj\n')};add('%PDF-1.4\n');
+ ob(1,'<</Type/Catalog/Pages 2 0 R>>');ob(2,'<</Type/Pages/Kids[3 0 R]/Count 1>>');ob(3,`<</Type/Page/Parent 2 0 R/MediaBox[0 0 ${pw} ${ph}]/Contents 4 0 R/Resources<</XObject<</I 5 0 R>>>>>>`);
+ const cs=`q ${pw} 0 0 ${ph} 0 0 cm /I Do Q`;ob(4,`<</Length ${cs.length}>>stream\n${cs}\nendstream`);
+ ob(5,`<</Type/XObject/Subtype/Image/Width ${w}/Height ${h}/ColorSpace/DeviceRGB/BitsPerComponent 8/Filter/DCTDecode/Length ${b.length}>>stream\n`,b);
+ const x=n;add('xref\n0 6\n0000000000 65535 f \n');for(let i=1;i<6;i++)add(String(o[i]).padStart(10,'0')+' 00000 n \n');add(`trailer<</Size 6/Root 1 0 R>>\nstartxref\n${x}\n%%EOF`);return new Blob(P,{type:'application/pdf'})}
+$('dp').onclick=async()=>{const im=await ld(jpg),b=Uint8Array.from(atob(jpg.split(',')[1]),c=>c.charCodeAt(0));save(mkpdf(b,im.width,im.height),'noir-'+sid+'.pdf')};
+$('dl').onclick=()=>{$('dlo').style.display=$('dlo').style.display==='flex'?'none':'flex'};
+$('dm').onclick=async()=>{
+ if(!vidBlob)return;
+ const b=$('dm'),old=b.textContent;b.disabled=true;b.textContent='Preparing...';
+ try{
+  const video=document.createElement('video');video.muted=true;video.playsInline=true;video.src=URL.createObjectURL(vidBlob);
+  await new Promise((resolve,reject)=>{video.onloadedmetadata=resolve;video.onerror=reject});
+  const out=mk(W+60,H+60),ox=out.getContext('2d');
+  const frame=mk(PW,PH),fx=frame.getContext('2d');
+  const render=()=>{
+   fx.clearRect(0,0,PW,PH);
+   if(mode==='duo'){
+    const half=PW/2,scaleL=Math.max(half/640,PH/480),wL=640*scaleL,hL=480*scaleL;
+    fx.save();fx.translate(half,0);fx.scale(-1,1);
+    fx.drawImage(video,0,0,640,480,(half-wL)/2,(PH-hL)/2,wL,hL);fx.restore();
+    const scaleR=Math.max(half/640,PH/480),wR=640*scaleR,hR=480*scaleR;
+    fx.drawImage(video,640,0,640,480,half+(half-wR)/2,(PH-hR)/2,wR,hR);
+   }else{
+    const scale=Math.max(PW/640,PH/480),w=640*scale,h=480*scale;
+    fx.save();fx.translate(PW,0);fx.scale(-1,1);
+    fx.drawImage(video,0,0,640,480,(PW-w)/2,(PH-h)/2,w,h);fx.restore();
+   }
+   const liveStrip=strip([frame,frame,frame]);
+   ox.fillStyle='#f4ecd8';ox.fillRect(0,0,out.width,out.height);
+   ox.save();ox.shadowColor='#0006';ox.shadowBlur=20;ox.drawImage(liveStrip,30,30);ox.restore();
+  };
+  await video.play();
+  const streamOut=out.captureStream(30),mt=recorderType();
+  const rec=new MediaRecorder(streamOut,mt?{mimeType:mt}:undefined),parts=[];
+  rec.ondataavailable=e=>{if(e.data.size)parts.push(e.data)};
+  rec.start();let raf;
+  const animate=()=>{render();if(!video.ended)raf=requestAnimationFrame(animate)};
+  animate();
+  await new Promise(resolve=>{video.onended=resolve});
+  cancelAnimationFrame(raf);render();
+  await new Promise(resolve=>{rec.onstop=resolve;rec.stop()});
+  streamOut.getTracks().forEach(t=>t.stop());
+  const blob=new Blob(parts,{type:rec.mimeType||vmt||'video/webm'});
+  const ext=blob.type.includes('mp4')?'mp4':'webm';
+  save(blob,'noir-'+sid+'.'+ext);
+  if(ext!=='mp4')$('tm').textContent='This browser records video as WebM, so the file was downloaded as .webm. MP4 depends on browser support.';
+ }catch(e){alert('Unable to create the video in this browser. Please try Chrome or Edge.')}
+ finally{b.textContent=old;b.disabled=false}
+};
+$('nw').onclick=()=>{clearInterval(tick);history.replaceState(null,'',location.pathname);fresh();show('home')};
+if(location.hash.length>1)openSession(location.hash.slice(1));
+</script></body></html>
